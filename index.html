@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disparador de Convites - WhatsApp</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2, h3 { color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #25d366; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-size: 16px; }
+        button:hover { background-color: #1ebe5d; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .preview-box { background: #e9ecef; padding: 15px; border-radius: 4px; margin-bottom: 20px; white-space: pre-wrap; font-size: 14px; }
+        .btn-excluir { background-color: #dc3545; padding: 6px 10px; font-size: 14px; margin-left: 5px; }
+        .btn-excluir:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sistema de Disparo de Convites</h2>
+
+    <div class="form-group">
+        <label>Mensagem Padrão do Evento:</label>
+        <div class="preview-box" id="mensagemPadrao">💛 *CHEGOU A HORA! VAMOS FAZER ESSA HISTÓRIA CHEGAR AO DF INTEIRO!*
+
+🚍 *ATENÇÃO PARA OS HORÁRIOS DO ÔNIBUS!*
+
+📍 *CONCENTRAÇÃO ULTRABOX - 7HRS*
+
+🎉 *DESTINO: GRANJA DO TORTO*
+📅 *DOMINGO — 16/08*
+⏰ *EVENTO ÀS 9H*
+
+🌊💛 *BORA, BORA!* Nossa pré-pré preferida estará nessa grande festa!
+
+*Não fique de fora! Venha com a gente!*</div>
+    </div>
+
+    <h3>Cadastrar Contato</h3>
+    <form id="formContato">
+        <div class="form-group">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" required placeholder="Ex: Maria Silva">
+        </div>
+        <div class="form-group">
+            <label for="telefone">Telefone (com DDD, apenas números):</label>
+            <input type="text" id="telefone" required placeholder="Ex: 61999998888">
+        </div>
+        <button type="submit">Cadastrar Contato</button>
+    </form>
+
+    <h3>Lista de Convidados</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaContatos">
+            <!-- Os contatos cadastrados aparecerão aqui -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    let contatos = JSON.parse(localStorage.getItem('lista_contatos')) || [];
+
+    const textoBase = `💛 *CHEGOU A HORA! VAMOS FAZER ESSA HISTÓRIA CHEGAR AO DF INTEIRO!*
+
+🚍 *ATENÇÃO PARA OS HORÁRIOS DO ÔNIBUS!*
+
+📍 *CONCENTRAÇÃO ULTRABOX - 7HRS*
+
+🎉 *DESTINO: GRANJA DO TORTO*
+📅 *DOMINGO — 16/08*
+⏰ *EVENTO ÀS 9H*
+
+🌊💛 *BORA, BORA!* Nossa pré-pré preferida estará nessa grande festa!
+
+*Não fique de fora! Venha com a gente!*`;
+
+    document.getElementById('formContato').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const nome = document.getElementById('nome').value.trim();
+        const telefone = document.getElementById('telefone').value.replace(/\D/g, '');
+
+        contatos.push({ nome, telefone });
+        localStorage.setItem('lista_contatos', JSON.stringify(contatos));
+
+        atualizarTabela();
+        this.reset();
+    });
+
+    function excluirContato(index) {
+        contatos.splice(index, 1);
+        localStorage.setItem('lista_contatos', JSON.stringify(contatos));
+        atualizarTabela();
+    }
+
+    function atualizarTabela() {
+        const tbody = document.getElementById('tabelaContatos');
+        tbody.innerHTML = '';
+
+        if (contatos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #777;">Nenhum contato cadastrado.</td></tr>`;
+            return;
+        }
+
+        contatos.forEach((c, index) => {
+            const mensagemPersonalizada = `Olá *${c.nome}*!\n\n${textoBase}`;
+            const linkWhatsapp = `https://api.whatsapp.com/send?phone=55${c.telefone}&text=${encodeURIComponent(mensagemPersonalizada)}`;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${c.nome}</td>
+                <td>${c.telefone}</td>
+                <td>
+                    <a href="${linkWhatsapp}" target="_blank"><button type="button">Enviar</button></a>
+                    <button type="button" class="btn-excluir" onclick="excluirContato(${index})">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Inicializa a tabela ao carregar a página
+    atualizarTabela();
+</script>
+
+</body>
+</html>
